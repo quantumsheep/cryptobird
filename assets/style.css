@@ -31,3 +31,10 @@ body {
 #messages li:nth-child(odd) {
     background: #eee;
 }
+
+.vertical-center {
+    min-height: 100%;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+}

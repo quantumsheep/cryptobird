@@ -13,8 +13,13 @@
     "url": "https://github.com/QuantumSheep/cryptobird.git"
   },
   "dependencies": {
+    "cookie-parser": "^1.4.3",
+    "ejs": "^2.5.9",
+    "ejs-locals": "^1.0.2",
     "express": "^4.16.3",
-    "socket.io": "^2.1.0"
+    "express-session": "^1.15.6",
+    "socket.io": "^2.1.0",
+    "uuid": "^3.2.1"
   },
   "devDependencies": {
     "@types/express": "^4.11.1",
