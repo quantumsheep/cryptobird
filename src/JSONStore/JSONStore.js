@@ -5,9 +5,9 @@ let Store;
 
 class JSONStore {
     /**
-     * Initialize FileStore with the given `options`
+     * Initialize JSONStore
      *
-     * @param {object} options (optional)
+     * @param {{[key: string]: any}} options (optional)
      *
      * @api public
      */
@@ -17,15 +17,19 @@ class JSONStore {
 
         this.path = options.path ? options.path : path.resolve('sessions');
 
+        this.prefix = options.prefix ? options.prefix : 'sess_';
+
         fs.exists(this.path, exists => {
             if (!exists) {
-                fs.mkdirSync(this.path);
+                fs.mkdir(this.path, err => {
+                    if (err) console.log(err);
+                });
             }
         });
     }
 
     /**
-     * Attempts to fetch session from a session file by the given `sessionId`
+     * Get the session's data
      *
      * @param {string} sid
      * @param {(err, data) => void} callback
@@ -33,27 +37,31 @@ class JSONStore {
      * @api public
      */
     get(sid, callback) {
-        const filepath = path.resolve(this.path, sid + '.json');
+        if (!callback) callback = () => {};
+
+        const filepath = path.resolve(this.path, this.prefix + sid + '.json');
 
         fs.readFile(filepath, (err, data) => {
             if (err) return callback(err);
-            if(!data) return callback();
+            if (!data) return callback();
 
             callback(null, JSON.parse(data));
         });
     }
 
     /**
-     * Attempts to commit the given session associated with the given `sessionId` to a session file
+     * Set the session's data
      *
-     * @param {string} sessionId
-     * @param {object} session
+     * @param {string} sid
+     * @param {any} session
      * @param {(err, data) => void} callback (optional)
      *
      * @api public
      */
     set(sid, session, callback) {
-        fs.writeFile(path.resolve(this.path, sid + '.json'), JSON.stringify(session), err => {
+        if (!callback) callback = () => {};
+
+        fs.writeFile(path.resolve(this.path, this.prefix + sid + '.json'), JSON.stringify(session), err => {
             if (err) return callback(err);
 
             callback(null, session);
@@ -61,87 +69,46 @@ class JSONStore {
     }
 
     /**
-     * Touch the given session object associated with the given `sessionId`
+     * Refresh the given session's Time To Live 
      *
      * @param {string} sessionId
-     * @param {object} session
-     * @param {function} callback
+     * @param {any} session
+     * @param {(err?: any) => void} callback
      *
      * @api public
      */
-    touch(sessionId, session, callback) {
-        helpers.touch(sessionId, session, this.options, callback);
+    touch(sid, session, callback) {
+        if (!callback) callback = () => {};
+        callback();
     }
 
     /**
      * Attempts to unlink a given session by its id
      *
-     * @param  {String}   sessionId   Files are serialized to disk by their
-     *                                sessionId
-     * @param  {Function} callback
-     *
+     * @param {string} sid
+     * @param {(err?: any) => void} callback
+     * 
      * @api public
      */
-    destroy(sessionId, callback) {
-        helpers.destroy(sessionId, this.options, callback);
-    }
+    destroy(sid, callback) {
+        if (!callback) callback = () => {};
 
-    /**
-     * Attempts to fetch number of the session files
-     *
-     * @param  {Function} callback
-     *
-     * @api public
-     */
-    length(callback) {
-        helpers.length(this.options, callback);
-    }
+        fs.unlink(path.resolve(this.path, this.prefix + sid + '.json'), err => {
+            if (err) callback(err);
 
-    /**
-     * Attempts to clear out all of the existing session files
-     *
-     * @param  {Function} callback
-     *
-     * @api public
-     */
-    clear(callback) {
-        helpers.clear(this.options, callback);
-    }
-
-    /**
-     * Attempts to find all of the session files
-     *
-     * @param  {Function} callback
-     *
-     * @api public
-     */
-    list(callback) {
-        helpers.list(this.options, callback);
-    }
-
-    /**
-     * Attempts to detect whether a session file is already expired or not
-     *
-     * @param  {String}   sessionId
-     * @param  {Function} callback
-     *
-     * @api public
-     */
-    expired(sessionId, callback) {
-
+            callback();
+        });
     }
 }
 
 /**
- * https://github.com/expressjs/session#session-store-implementation
- *
- * @param {Object} session  express session
- * @return {JSONStore} the `FileStore` extending `express`'s session Store
- *
+ * 
+ * @param {any} session 
+ * @returns {JSONStore}
+ * 
  * @api public
  */
 module.exports = session => {
-    console.log(session);
     Store = session.Store;
 
     /**

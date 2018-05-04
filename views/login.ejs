@@ -1,63 +1,73 @@
 <% layout('layout') -%>
-<% block('title', "Login") -%>
+    <% block('title', "Login") -%>
+        <div class="vertical-center">
+            <div class="card mx-auto" style="width:40em;">
+                <form class="card-body m-0" action="/login" method="POST" id="login">
+                    <h5 class="card-title">Login</h5>
 
-<div class="vertical-center" id="login">
-    <div class="card mx-auto" style="width:40em;">
-        <form class="card-body m-0" action="/login" method="POST">
-            <h5 class="card-title">Login</h5>
-            <div class="form-group">
-                <input type="email" class="form-control" name="email" placeholder="Email" autofocus="autofocus">
+                    <% if(session && session.errors) { %>
+                        <% session.errors.forEach(msg => { %>
+                            <div class="alert alert-danger" role="alert"><%- msg %></div>
+                        <% }) %>
+                    <% } %>
+
+                    <div class="form-group">
+                        <input type="email" required="required" class="form-control" name="email" placeholder="Email" autofocus="autofocus">
+                    </div>
+                    <div class="form-group">
+                        <input type="password" required="required" class="form-control" name="password" placeholder="Password">
+                    </div>
+
+                    <a href="#signup" class="btn btn-primary">Sign up</a>
+                    <button type="submit" class="btn bg-primary text-white float-right">Connect</button>
+                </form>
+                <form class="card-body m-0" action="/signup" method="POST" id="signup" style="display: none;">
+                    <h5 class="card-title">Sign up</h5>
+
+                    <% if(session && session.errors) { %>
+                        <% session.errors.forEach(msg => { %>
+                            <div class="alert alert-danger" role="alert"><%- msg %></div>
+                        <% }) %>
+                    <% } %>
+
+                    <div class="form-group">
+                        <input type="email" required="required" class="form-control" name="email" placeholder="Email">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" required="required" class="form-control" name="username" placeholder="Username">
+                    </div>
+                    <div class="form-group">
+                        <input type="password" required="required" class="form-control" name="password" placeholder="Password">
+                    </div>
+                    <div class="form-group">
+                        <input type="password" required="required" class="form-control" name="password2" placeholder="Password">
+                    </div>
+
+                    <a href="#login" class="btn btn-primary">Log in</a>
+                    <button type="submit" class="btn bg-primary text-white float-right">Connect</button>
+                </form>
             </div>
-            <div class="form-group">
-                <input type="password" class="form-control" name="password" placeholder="Password">
-            </div>
+        </div>
 
-            <a href="#signup" class="btn btn-primary">Sign up</a>
-            <button type="submit" class="btn bg-primary text-white float-right">Connect</button>
-        </form>
-    </div>
-</div>
+        <script>
+            function switchWindow() {
+                switch (location.hash) {
+                    case "#signup":
+                        document.getElementById("login").style.display = "none";
+                        document.getElementById("signup").style.display = "";
+                        break;
+                    default:
+                        document.getElementById("signup").style.display = "none";
+                        document.getElementById("login").style.display = "";
+                        break;
+                }
+            }
 
-<div class="vertical-center" id="signup" style="display: none;">
-    <div class="card mx-auto" style="width:40em;">
-        <form class="card-body m-0" action="/signup" method="POST">
-            <h5 class="card-title">Sign up</h5>
-            <div class="form-group">
-                <input type="email" class="form-control" name="email" placeholder="Email">
-            </div>
-            <div class="form-group">
-                <input type="text" class="form-control" name="username" placeholder="Username">
-            </div>
-            <div class="form-group">
-                <input type="password" class="form-control" name="password" placeholder="Password">
-            </div>
-            <div class="form-group">
-                <input type="password" class="form-control" name="password2" placeholder="Password">
-            </div>
+            switchWindow();
 
-            <a href="#login" class="btn btn-primary">Log in</a>
-            <button type="submit" class="btn bg-primary text-white float-right">Connect</button>
-        </form>
-    </div>
-</div>
+            window.addEventListener('hashchange', e => {
+                switchWindow();
+            });
 
-<script>
-    function switchWindow() {
-        switch (location.hash) {
-            case "#signup":
-                document.getElementById("login").style.display = "none";
-                document.getElementById("signup").style.display = "";
-                break;
-            default:
-                document.getElementById("signup").style.display = "none";
-                document.getElementById("login").style.display = "";
-                break;
-        }
-    }
-
-    switchWindow();
-
-    window.addEventListener('hashchange', e => {
-        switchWindow();
-    });
-</script>
+            document.body.style.display = "";
+        </script>

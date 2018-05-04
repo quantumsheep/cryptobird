@@ -7,6 +7,11 @@ const ejs = require('ejs');
 const ejs_engine = require('ejs-locals');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
+const async = require('async');
+const validator = require('validator');
+const bcrypt = require('bcrypt');
+
+const database = require('./database');
 const JSONStore = require('./JSONStore/JSONStore')(session);
 
 app.use('/assets', express.static('assets'));
@@ -21,15 +26,18 @@ app.use(session({
 }));
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({
+    extended: false
+}));
 
 app.engine('ejs', ejs_engine);
 app.set('views', path.resolve('views'));
 app.set('view engine', 'ejs');
 
 app.get('/', (req, res) => {
-    req.session.username = "QuantumSheep";
-    res.render('login.ejs');
+    res.render('login.ejs', {
+        session: req.session
+    });
 });
 
 app.post('/login', (req, res) => {
@@ -37,12 +45,76 @@ app.post('/login', (req, res) => {
 });
 
 app.post('/signup', (req, res) => {
-    new Promise((resolve, reject) => {
+    async.parallel([
+        (callback) => {
+            if (validator.isEmail(req.body.email)) {
+                callback();
+            } else {
+                callback(null, "Invalid email");
+            }
+        },
+        (callback) => {
+            if (req.body.username && req.body.username.length >= 3) {
+                callback();
+            } else {
+                callback(null, "Username must be at least 3 characters long");
+            }
+        },
+        (callback) => {
+            if (req.body.password && req.body.password.length >= 8) {
+                callback();
+            } else {
+                callback(null, "The password must be at least 8 characters long");
+            }
+        },
+        (callback) => {
+            if (req.body.password && req.body.password === req.body.password2) {
+                callback();
+            } else {
+                callback(null, "The confimation's password doesn't match with the password");
+            }
+        }
+    ], (err, results) => {
+        req.session.errors = [];
 
-    }).then(() => {
+        results.forEach(msg => {
+            if (msg) {
+                req.session.errors.push(msg);
+            }
+        });
 
-    }).catch(err => {
+        if (req.session.errors.length === 0) {
+            database.query("SELECT email, username FROM USER WHERE email=? AND username=?;", [req.body.email, req.body.username], (err, results, fields) => {
+                if (err) console.log(err);
+                console.log(results);
 
+                if (!results) {
+                    bcrypt.genSalt(10, (err, salt) => {
+                        bcrypt.hash(req.body.password, salt, (err, hash) => {
+                            database.query("INSERT INTO USER(email, username, password, createddate) VALUES(?, ?, ?, NOW());", [req.body.email, req.body.username, hash], (err, results, fields) => {
+                                if (err) console.log(err);
+
+                                res.redirect('/#signup');
+                            });
+                        });
+                    });
+                } else {
+                    results.forEach(row => {
+                        if(row["username"] == req.body.username) {
+                            req.session.errors.push("This username is already taken");
+                        }
+
+                        if(row["email"] == req.body.email) {
+                            req.session.errors.push("This email is already taken");
+                        }
+                    });
+
+                    res.redirect('/#signup');
+                }
+            });
+        } else {
+            res.redirect('/#signup');
+        }
     });
 });
 
