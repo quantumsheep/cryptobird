@@ -15,6 +15,8 @@ app.use(cookieParser());
 
 app.use(session({
     store: new JSONStore(),
+    resave: true,
+    saveUninitialized: false,
     secret: '1859ac8b09e62ca519d9d56519137b9ba1d4a3694e694f15c864c4c7f1414648'
 }));
 
