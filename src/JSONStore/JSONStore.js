@@ -53,11 +53,10 @@ class JSONStore {
      * @api public
      */
     set(sid, session, callback) {
-        console.log(session);
-        fs.writeFile(path.resolve(this.path, sid + '.json'), '{}', err => {
+        fs.writeFile(path.resolve(this.path, sid + '.json'), JSON.stringify(session), err => {
             if (err) return callback(err);
 
-            callback(null, {});
+            callback(null, session);
         });
     }
 
