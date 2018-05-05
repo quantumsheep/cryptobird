@@ -20,12 +20,42 @@ body {
     pointer-events: none;
 }
 
+.overflowy-auto {
+    overflow-y: auto;
+}
+
+.limited-text {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.untouchable,
+.untouchable * {
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    pointer-events: none;
+}
+
+a.btn {
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
 #messages {
     overflow: auto;
 }
 
 #messages li {
     padding: 5px 10px;
+}
+
+#messages li * {
+    max-width: 100%;
 }
 
 #messages li:nth-child(odd) {

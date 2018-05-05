@@ -1,0 +1,34 @@
+<% layout('layout') -%>
+<% block('title', "Create an account") -%>
+<div class="vertical-center flex-column flex-wrap">
+    <div class="mw-100 mx-auto px-5 py-2 untouchable" style="width:30em;">
+        <img class="w-100" src="/assets/img/logo.png">
+    </div>
+    <div class="mw-100 card mx-auto" style="width:40em;">
+        <form class="card-body m-0" action="/register" method="POST">
+            <h5 class="card-title">Create an account</h5>
+
+            <% if(session && session.errors) { %>
+                <% session.errors.forEach(msg => { %>
+                    <div class="alert alert-danger" role="alert"><%- msg %></div>
+                <% }) %>
+            <% } %>
+
+            <div class="form-group">
+                <input type="email" required="required" class="form-control" name="email" value="<%- session.data && session.data.email ? session.data.email : null %>" placeholder="Email" autofocus="autofocus">
+            </div>
+            <div class="form-group">
+                <input type="text" required="required" class="form-control" pattern="^[a-zA-Z0-9_]{3,}$" name="username" value="<%- session.data && session.data.username ? session.data.username : null %>" placeholder="Username">
+            </div>
+            <div class="form-group">
+                <input type="password" required="required" class="form-control" name="password" placeholder="Password">
+            </div>
+            <div class="form-group">
+                <input type="password" required="required" class="form-control" name="password2" placeholder="Confirmation's password">
+            </div>
+
+            <a href="/login" class="btn btn-primary">Log in</a>
+            <button type="submit" class="btn bg-primary text-white float-right">Create</button>
+        </form>
+    </div>
+</div>
