@@ -11,6 +11,7 @@ const session = require('express-session');
 const async = require('async');
 const validator = require('validator');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 
 const database = require('./database');
 const JSONStore = require('./JSONStore/JSONStore')(session);
@@ -23,7 +24,10 @@ const sess = session({
     store: new JSONStore(),
     resave: true,
     saveUninitialized: false,
-    secret: '1859ac8b09e62ca519d9d56519137b9ba1d4a3694e694f15c864c4c7f1414648'
+    secret: '1859ac8b09e62ca519d9d56519137b9ba1d4a3694e694f15c864c4c7f1414648',
+    cookie: {
+        maxAge: 3154e+7 // 365 days
+    },
 });
 
 app.use(sess);
@@ -37,23 +41,84 @@ app.engine('ejs', ejs_engine);
 app.set('views', path.resolve('views'));
 app.set('view engine', 'ejs');
 
-app.get('/', (req, res) => {
-    if (!req.session.account) {
-        res.redirect('/login');
+/**
+ * 
+ * @param {{[key: string]: any}} session 
+ * @param {(valid: boolean) => void} callback 
+ */
+function checkAccount(session, callback = (valid) => {}) {
+    if (!session.account || !session.account.token || !session.account.id) {
+        return callback(false);
     } else {
-        res.render('messenger', {
-            session: req.session
+        database.query("SELECT COUNT(*) as valid FROM USER WHERE id = ? AND token = ?", [session.account.id, session.account.token], (err, results, fields) => {
+            callback(results[0].valid === 1);
         });
     }
+}
+
+app.get('/', (req, res) => {
+    checkAccount(req.session, valid => {
+        if (valid) {
+            res.render('messenger', {
+                session: req.session
+            });
+        } else {
+            res.redirect('/login');
+        }
+    });
+});
+
+app.get('/messenger/:id', (req, res) => {
+    checkAccount(req.session, valid => {
+        if (valid) {
+            res.render('messenger', {
+                session: req.session
+            });
+        } else {
+            res.redirect('/login');
+        }
+    });
+});
+
+app.post('/addcontact', (req, res) => {
+    if (!req.body.user || Number.isNaN(req.body.user)) {
+        console.log(req.body.user);
+        return res.redirect('/response/0');
+    }
+
+    checkAccount(req.session, valid => {
+        if (valid) {
+            database.query("INSERT INTO CONTACT(user, contact, status) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE status=1", [req.session.account.id, req.body.user, 1], (err, results, fields) => {
+                res.redirect('/response/1');
+            });
+        } else {
+            res.redirect('/response/0');
+        }
+    });
+});
+
+app.get('/response/:response', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify({
+        response: req.params.response
+    }));
 });
 
 app.get('/login', (req, res) => {
+    if (req.session.account) {
+        return res.redirect('/');
+    }
+
     res.render('login', {
         session: req.session
     });
 });
 
 app.get('/register', (req, res) => {
+    if (req.session.account) {
+        return res.redirect('/');
+    }
+
     res.render('register', {
         session: req.session
     });
@@ -66,6 +131,10 @@ app.get('/logout', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
+    if (req.session.account) {
+        return res.redirect('/');
+    }
+
     function invalidCredentials() {
         req.session.errors = ["Invalid credentials"];
         req.session.data = {
@@ -73,17 +142,19 @@ app.post('/login', (req, res) => {
         }
         res.redirect("/");
     }
-    
+
     if (req.body.account && (validator.isEmail(req.body.account) || req.body.account.match(/^[a-zA-Z0-9_]{3,}$/g)) && req.body.password && req.body.password.length >= 8) {
-        database.query("SELECT email, username, password FROM USER WHERE username = ? OR email = ?", [req.body.account, req.body.account], (err, results, fields) => {
+        database.query("SELECT id, email, username, password, token FROM USER WHERE username = ? OR email = ?", [req.body.account, req.body.account], (err, results, fields) => {
             if (err) console.log(err);
 
             if (results.length === 1) {
                 bcrypt.compare(req.body.password, results[0].password.toString(), (err, same) => {
                     if (same) {
                         req.session.account = {
+                            "id": results[0].id,
                             "email": results[0].email,
-                            "username": results[0].username
+                            "username": results[0].username,
+                            "token": results[0].token
                         }
                         res.redirect("/");
                     } else {
@@ -100,6 +171,10 @@ app.post('/login', (req, res) => {
 });
 
 app.post('/register', (req, res) => {
+    if (req.session.account) {
+        return res.redirect('/');
+    }
+
     function informationError() {
         req.session.data = {
             "username": req.body.username,
@@ -157,7 +232,7 @@ app.post('/register', (req, res) => {
                 if (!results || results.length <= 0) {
                     bcrypt.genSalt(10, (err, salt) => {
                         bcrypt.hash(req.body.password, salt, (err, hash) => {
-                            database.query("INSERT INTO USER(email, username, password, createddate) VALUES(?, ?, ?, NOW());", [req.body.email, req.body.username, hash], (err, results, fields) => {
+                            database.query("INSERT INTO USER(email, username, password, createddate, token) VALUES(?, ?, ?, NOW(), ?);", [req.body.email, req.body.username, hash, crypto.randomBytes(16).toString('hex')], (err, results, fields) => {
                                 if (err) console.log(err);
 
                                 res.redirect('/login');
@@ -188,16 +263,44 @@ io.use(ios(sess));
 
 io.on('connection', socket => {
     if (socket.handshake.session.account) {
-        io.emit('infos connected', Object.keys(io.sockets.clients().connected).length);
-
         socket.on('disconnect', () => {
-            io.emit('infos connected', Object.keys(io.sockets.clients().connected).length);
+
+        });
+
+        socket.on('user connect', data => {
+            if(data && data.url) {
+                socket.handshake.data = data;
+
+                socket.handshake.data.room = socket.handshake.data.url.replace(/(^\/messenger\/)/gi, '')
+            }
         });
 
         socket.on('chat message', msg => {
-            if (msg != "") {
-                io.emit('chat message', `${socket.handshake.session.account.username}: ${msg}`);
+            if (socket.handshake.data.room && !Number.isNaN(socket.handshake.data.room) && msg) {
+                socket.emit('chat message', socket.handshake.session.id, msg);
+
+                for(let i in io.sockets.connected) {
+                    console.log(io.sockets.connected[i].handshake.session.account.id, socket.handshake.data.room);
+                    if(io.sockets.connected[i].handshake.session.account.id && io.sockets.connected[i].handshake.session.account.id == socket.handshake.data.room) {
+                        io.sockets.connected[i].emit('chat message', socket.handshake.session.id, msg);
+                        break;
+                    }
+                }
             }
+        });
+
+        socket.on('contact search', args => {
+            database.query("SELECT id, username FROM USER WHERE username LIKE CONCAT('%', ?, '%') AND (id IN (SELECT contact FROM CONTACT as c1 WHERE status = 1 AND user = ? AND user = (SELECT contact FROM CONTACT as c2 WHERE status = 1 AND user = c1.contact AND contact = c1.user)) OR id = ?) LIMIT 10;", [args, socket.handshake.session.account.id, socket.handshake.session.account.id], (err, results, fields) => {
+                socket.emit("contact search", results, 'contact');
+            });
+
+            database.query("SELECT id, username FROM USER WHERE username LIKE CONCAT('%', ?, '%') AND id NOT IN (SELECT contact FROM CONTACT as c1 WHERE status = 1 AND user = ? AND user = (SELECT contact FROM CONTACT as c2 WHERE status = 1 AND user = c1.contact AND contact = c1.user)) AND id <> ? LIMIT 10;", [args, socket.handshake.session.account.id, socket.handshake.session.account.id], (err, results, fields) => {
+                socket.emit("contact search", results, 'others');
+            });
+
+            database.query("SELECT id, username FROM USER WHERE username LIKE CONCAT('%', ?, '%') AND id IN (SELECT contact FROM CONTACT as c1 WHERE status = 1 AND user = ? AND (SELECT contact FROM CONTACT as c2 WHERE status = 1 AND user = c1.contact AND contact = c1.user) IS NULL) AND id <> ? LIMIT 10;", [args, socket.handshake.session.account.id, socket.handshake.session.account.id], (err, results, fields) => {
+                socket.emit("contact search", results, 'asked');
+            });
         });
     }
 });

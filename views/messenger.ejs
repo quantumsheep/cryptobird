@@ -1,54 +1,59 @@
 <% layout('layout') -%>
 <% block('title', "Messages") -%>
 <div class="h-100 d-flex">
-    <div class="h-100 list-group p-0 overflowy-auto border-right" style="width:20em;min-width:20em;max-width:20em;">
-        <a href="#" class="list-group-item list-group-item-action flex-column align-items-start active">
-            <div class="d-flex w-100 justify-content-between">
-                <h5 class="mb-1">QuantumSheep</h5>
-                <small>2 hours ago</small>
-            </div>
-            <small class="limited-text w-100">So yesterday I told you that that will be great if we go to Camping this week!</small>
-        </a>
-        <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
-            <div class="d-flex w-100 justify-content-between">
-                <h5 class="mb-1">Loli girl</h5>
-                <small>1 days ago</small>
-            </div>
-            <small class="limited-text w-100">I swear I've 21 years old</small>
-        </a>
-        <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
-            <div class="d-flex w-100 justify-content-between">
-                <h5 class="mb-1">Hitsu</h5>
-                <small>5 days ago</small>
-            </div>
-            <small class="limited-text w-100">He's such a good and modest developper</small>
-        </a>
-        <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
-            <div class="d-flex w-100 justify-content-between">
-                <h5 class="mb-1">Simon</h5>
-                <small>6 days ago</small>
-            </div>
-            <small class="limited-text w-100">I finished that amazing book from Asimov the last week, it was gorgeous!</small>
-        </a>
-        <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
-            <div class="d-flex w-100 justify-content-between">
-                <h5 class="mb-1">Michael</h5>
-                <small>6 days ago</small>
-            </div>
-            <small class="limited-text w-100">And then I vomited all my spagets</small>
-        </a>
+    <div class="h-100 d-flex flex-column border-right" style="width:20em;min-width:20em;max-width:20em;">
+        <input id="search" class="form-control px-3" autocomplete="off" placeholder="Search">
+        <div id="search-response" class="p-0 overflow-auto" style="display:none;">
+            <small class="px-2 text-secondary">Contacts</small>
+            <div id="search-contacts" class="list-group"></div>
+            <small class="px-2 text-secondary">Others</small>
+            <ul id="search-others" class="list-group"></ul>
+            <small class="px-2 text-secondary">Asked</small>
+            <ul id="search-asked" class="list-group"></ul>
+        </div>
+        <div id="contact-list" class="list-group p-0 overflow-auto">
+            <a href="#" class="list-group-item list-group-item-action flex-column align-items-start active">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">QuantumSheep</h5>
+                    <small>2 hours ago</small>
+                </div>
+                <small class="limited-text w-100">So yesterday I told you that that will be great if we go to Camping this week!</small>
+            </a>
+            <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">Loli girl</h5>
+                    <small>1 days ago</small>
+                </div>
+                <small class="limited-text w-100">I swear I've 21 years old</small>
+            </a>
+            <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">Hitsu</h5>
+                    <small>5 days ago</small>
+                </div>
+                <small class="limited-text w-100">He's such a good and modest developper</small>
+            </a>
+            <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">Simon</h5>
+                    <small>6 days ago</small>
+                </div>
+                <small class="limited-text w-100">I finished that amazing book from Asimov the last week, it was gorgeous!</small>
+            </a>
+            <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">Michael</h5>
+                    <small>6 days ago</small>
+                </div>
+                <small class="limited-text w-100">And then I vomited all my spagets</small>
+            </a>
+        </div>
     </div>
     <div class="h-100 w-100">
-        <div class="position-absolute rpanel">
-            <span id="connected"></span>
-            <i class="fas fa-male"></i>
-        </div>
         <div class="d-flex flex-column h-100 w-100">
             <ul id="messages" class="h-100 m-0 p-0"></ul>
-            <form id="input" class="d-flex w-100 border-top m-0" action="">
-                <div class="w-100">
-                    <input class="form-control w-100 p-2" name="m" autocomplete="off" placeholder="Message">
-                </div>
+            <form id="input" class="d-flex w-100 border-top m-0">
+                <input class="form-control w-100 h-100 p-2" name="m" autocomplete="off" placeholder="Message">
                 <button type="submit" class="btn btn-primary bg-primary text-white m-0">Send</button>
             </form>
         </div>
@@ -59,13 +64,52 @@
 <script>
     const socket = io();
 
-    socket.on('chat message', msg => {
+    socket.emit('user connect', {
+        url: window.location.pathname
+    });
+
+    socket.on('chat message', (from, msg) => {
         document.getElementById("messages").innerHTML += `<li>${msg}</li>`;
         document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight - document.getElementById("messages").clientHeight;
     });
 
     socket.on('infos connected', num => {
         document.getElementById("connected").innerHTML = num;
+    });
+
+    function addContact(elem, id) {
+        const http = new XMLHttpRequest();
+        http.open("POST", "/addcontact", true);
+
+        http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+        http.onreadystatechange = (req, ev) => {
+            if(http.readyState == 4 && http.status == 200) {
+                if(JSON.parse(http.responseText).response == 1) {
+                    elem.remove();
+                }
+            }
+        }
+
+        http.send(`user=${id}`);
+    }
+
+    socket.on('contact search', (users, type) => {
+        if(users) {
+            if(type === 'contact') {
+                users.forEach(user => {
+                    document.getElementById("search-contacts").innerHTML += `<a href="/messenger/${user.id}" class="list-group-item list-group-item-action p-2 active"><small>${user.username}</small></a>`;
+                });
+            } else if(type === 'others') {
+                users.forEach(user => {
+                    document.getElementById("search-others").innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center p-2 active"><small>${user.username}</small><small class="fas fa-plus cursor-pointer" onclick="addContact(this, ${user.id});"></small></li>`;
+                });
+            } else if(type === 'asked') {
+                users.forEach(user => {
+                    document.getElementById("search-asked").innerHTML += `<li class="list-group-item p-2 active"><small>${user.username}</small></li>`;
+                });
+            }
+        }
     });
 
     document.getElementById("input").addEventListener("submit", e => {
@@ -75,5 +119,21 @@
 
         e.target.m.value = "";
         return false;
+    });
+
+    document.getElementById("search").addEventListener("input", e => {
+        document.getElementById("search-contacts").innerHTML = "";
+        document.getElementById("search-others").innerHTML = "";
+        document.getElementById("search-asked").innerHTML = "";
+
+        if(e.target.value) {
+            socket.emit('contact search', e.target.value);
+
+            document.getElementById("contact-list").style.display = "none";
+            document.getElementById("search-response").style.display = "";
+        } else {
+            document.getElementById("search-response").style.display = "none";
+            document.getElementById("contact-list").style.display = "";
+        }
     });
 </script>

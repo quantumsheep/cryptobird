@@ -20,7 +20,7 @@ body {
     pointer-events: none;
 }
 
-.overflowy-auto {
+.overflow-auto {
     overflow-y: auto;
 }
 
@@ -67,4 +67,8 @@ a.btn {
     min-height: 100vh;
     display: flex;
     align-items: center;
+}
+
+.cursor-pointer {
+    cursor: pointer;
 }
