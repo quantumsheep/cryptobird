@@ -73,8 +73,18 @@
         document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight - document.getElementById("messages").clientHeight;
     });
 
-    socket.on('infos connected', num => {
-        document.getElementById("connected").innerHTML = num;
+    socket.on('list messages', msgs => {
+        if(msgs) {
+            console.log(msgs);
+            msgs.forEach(msg => {
+                const row = document.createElement("li");
+                row.appendChild(document.createTextNode(`${msg.username}: ${msg.content}`));
+
+                document.getElementById("messages").insertBefore(row, document.getElementById("messages").firstChild);
+
+                document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight - document.getElementById("messages").clientHeight;
+            });
+        }
     });
 
     function addContact(elem, id) {
@@ -136,4 +146,6 @@
             document.getElementById("contact-list").style.display = "";
         }
     });
+
+    socket.emit('get messages', 0);
 </script>
