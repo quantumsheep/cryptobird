@@ -146,7 +146,7 @@ app.post('/login', (req, res) => {
         database.query("SELECT id, email, username, password, token FROM USER WHERE username = ? OR email = ?", [req.body.account, req.body.account], (err, results, fields) => {
             if (err) console.log(err);
 
-            if (results.length === 1) {
+            if (results && results.length === 1) {
                 bcrypt.compare(req.body.password, results[0].password.toString(), (err, same) => {
                     if (same) {
                         req.session.account = {
@@ -302,13 +302,13 @@ io.on('connection', socket => {
         });
 
         socket.on('chat message', msg => {
-            if (socket.handshake.data && socket.handshake.data.contact && socket.handshake.session.account && msg) {
+            if (socket.handshake.data && socket.handshake.data.contact && !Number.isNaN(socket.handshake.data.contact) && socket.handshake.session.account && msg) {
                 database.query("SELECT COUNT(*) as valid FROM CONTACT as c1 WHERE status=1 AND user = ? AND contact = ? AND (SELECT status FROM CONTACT WHERE user=c1.contact AND contact=c1.user)=1;", [socket.handshake.session.account.id, socket.handshake.data.contact], (err, results, fields) => {
                     if (err) console.log(err);
 
                     if (results) {
                         for (let i in io.sockets.connected) {
-                            if (io.sockets.connected[i].handshake.session.account.id && (io.sockets.connected[i].handshake.session.account.id == socket.handshake.data.contact || io.sockets.connected[i].handshake.session.account.id == socket.handshake.session.account.id)) {
+                            if (io.sockets.connected[i].handshake.session.account && io.sockets.connected[i].handshake.session.account.id && (io.sockets.connected[i].handshake.session.account.id == socket.handshake.data.contact || io.sockets.connected[i].handshake.session.account.id == socket.handshake.session.account.id)) {
                                 if (io.sockets.connected[i].handshake.data && (io.sockets.connected[i].handshake.data.contact == socket.handshake.session.account.id || socket.handshake.data.contact == socket.handshake.session.account.id || io.sockets.connected[i].handshake.session.account.id == socket.handshake.session.account.id)) {
                                     io.sockets.connected[i].emit('chat message', socket.handshake.session.account.id, `${socket.handshake.session.account.username}: ${msg}`);
                                 } else {
