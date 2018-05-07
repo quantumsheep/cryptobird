@@ -6,13 +6,13 @@
     </div>
     <div class="mw-100 card mx-auto" style="width:40em;">
         <form class="card-body m-0" action="/login" method="POST">
+            <input type="hidden" name="_csrf" value="<%- csrfToken %>">
             <h5 class="card-title">Login</h5>
-
-            <% if(session && session.errors) { %>
-                <% session.errors.forEach(msg => { %>
+            <% if(session && session.errors) { -%>
+                <% session.errors.forEach(msg => { -%>
                     <div class="alert alert-danger" role="alert"><%- msg %></div>
-                <% }) %>
-            <% } %>
+                <% }) -%>
+            <% } -%>
 
             <div class="form-group">
                 <input type="text" required="required" class="form-control" pattern="^[a-zA-Z0-9.!#$%&’*+\/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$|^[a-zA-Z0-9_]{3,}$" name="account" value="<%- session.data && session.data.account ? session.data.account : null %>" placeholder="Email or username" autofocus="autofocus">

@@ -12,18 +12,17 @@ const async = require('async');
 const validator = require('validator');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
+const csrf = require('csurf');
+const helmet = require('helmet');
 
 const database = require('./database');
 const JSONStore = require('./JSONStore/JSONStore')(session);
 
-app.use('/assets', express.static('assets'));
-
-app.use(cookieParser());
-
 const sess = session({
+    name: 'cryptosess',
     store: new JSONStore(),
-    resave: true,
-    saveUninitialized: false,
+    resave: false,
+    saveUninitialized: true,
     secret: '1859ac8b09e62ca519d9d56519137b9ba1d4a3694e694f15c864c4c7f1414648',
     cookie: {
         maxAge: 3154e+7 // 365 days
@@ -32,14 +31,34 @@ const sess = session({
 
 app.use(sess);
 
+app.use(helmet());
+
+app.use(cookieParser());
+
 app.use(express.json());
 app.use(express.urlencoded({
     extended: false
 }));
 
+app.use(csrf({
+    cookie: true
+}));
+
+app.use('/assets', express.static('assets'));
+
 app.engine('ejs', ejs_engine);
 app.set('views', path.resolve('views'));
 app.set('view engine', 'ejs');
+
+app.use((err, req, res, next) => {
+    if (err.code === 'EBADCSRFTOKEN') {
+        req.session.errorCode = 403;
+    } else {
+        req.session.errorCode = 500;
+    }
+
+    res.redirect('/error');
+});
 
 /**
  * 
@@ -56,11 +75,23 @@ function checkAccount(session, callback = (valid) => {}) {
     }
 }
 
+app.get('/error', (req, res) => {
+    if (!req.session.errorCode) {
+        req.session.errorCode = 404;
+    }
+
+    res.render('error', {
+        session: req.session,
+        isError: true
+    });
+});
+
 app.get('/', (req, res) => {
     checkAccount(req.session, valid => {
         if (valid) {
             res.render('messenger', {
-                session: req.session
+                session: req.session,
+                csrfToken: req.csrfToken()
             });
         } else {
             res.redirect('/login');
@@ -72,7 +103,8 @@ app.get('/messenger/:id', (req, res) => {
     checkAccount(req.session, valid => {
         if (valid) {
             res.render('messenger', {
-                session: req.session
+                session: req.session,
+                csrfToken: req.csrfToken()
             });
         } else {
             res.redirect('/login');
@@ -109,7 +141,8 @@ app.get('/login', (req, res) => {
     }
 
     res.render('login', {
-        session: req.session
+        session: req.session,
+        csrfToken: req.csrfToken()
     });
 });
 
@@ -119,14 +152,17 @@ app.get('/register', (req, res) => {
     }
 
     res.render('register', {
-        session: req.session
+        session: req.session,
+        csrfToken: req.csrfToken()
     });
 });
 
 app.get('/logout', (req, res) => {
     req.session.account = undefined;
 
-    res.redirect('/login');
+    res.redirect('/login', {
+        csrfToken: req.csrfToken()
+    });
 });
 
 app.post('/login', (req, res) => {
@@ -258,6 +294,12 @@ app.post('/register', (req, res) => {
     });
 });
 
+app.use('*', (req, res) => {
+    req.session.errorCode = 404;
+
+    res.redirect('/error');
+});
+
 io.use(ios(sess));
 
 io.on('connection', socket => {
@@ -302,7 +344,7 @@ io.on('connection', socket => {
         });
 
         socket.on('chat message', msg => {
-            if (socket.handshake.data && socket.handshake.data.contact && !Number.isNaN(socket.handshake.data.contact) && socket.handshake.session.account && msg) {
+            if (socket.handshake.data.inMessenger && socket.handshake.data && socket.handshake.data.contact && !Number.isNaN(socket.handshake.data.contact) && socket.handshake.session.account && msg) {
                 database.query("SELECT COUNT(*) as valid FROM CONTACT as c1 WHERE status=1 AND user = ? AND contact = ? AND (SELECT status FROM CONTACT WHERE user=c1.contact AND contact=c1.user)=1;", [socket.handshake.session.account.id, socket.handshake.data.contact], (err, results, fields) => {
                     if (err) console.log(err);
 
@@ -342,5 +384,5 @@ io.on('connection', socket => {
 });
 
 http.listen(3000, () => {
-    console.log('listening on *:3000');
+    console.log('listening on http://localhost:3000');
 });

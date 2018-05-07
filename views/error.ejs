@@ -1,0 +1,23 @@
+<% layout('layout') -%>
+<% block('title', "Login") -%>
+<div class="vertical-center flex-column flex-wrap">
+    <div class="mw-100 mx-auto px-5 py-2 untouchable" style="width:30em;">
+        <img class="w-100" src="/assets/img/logo.png">
+    </div>
+    <div class="mw-100 card mx-auto" style="width:40em;">
+        <div class="card-body m-0">
+            <% if(session.errorCode == 404) { -%>
+                <h5 class="card-title">Page not found</h5>
+                <div>Sorry, the page that you asked for doens't exists.</div>
+            <% } else if(session.errorCode == 403) { -%>
+                <h5 class="card-title">Access denied</h5>
+                <div>The action that you requested is protected, it seems like you don't have the proper rights to access it.</div>
+            <% } else { -%>
+                <h5 class="card-title">Something gets wrong</h5>
+                <div>It seemns like cat walked on the developer's keyboard and broke everything.</div>
+            <% } -%>
+
+            <a href="/" class="btn bg-primary text-white w-100 mt-4">Go back to <%- session.account ? 'your messages' : 'login page' %></a>
+        </div>
+    </div>
+</div>
