@@ -75,7 +75,6 @@
 
     socket.on('list messages', msgs => {
         if(msgs) {
-            console.log(msgs);
             msgs.forEach(msg => {
                 const row = document.createElement("li");
                 row.appendChild(document.createTextNode(`${msg.username}: ${msg.content}`));
@@ -107,14 +106,20 @@
     socket.on('contact search', (users, type) => {
         if(users) {
             if(type === 'contact') {
+                document.getElementById("search-contacts").innerHTML = "";
+
                 users.forEach(user => {
                     document.getElementById("search-contacts").innerHTML += `<a href="/messenger/${user.id}" class="list-group-item list-group-item-action p-2 active"><small>${user.username}</small></a>`;
                 });
             } else if(type === 'others') {
+                document.getElementById("search-others").innerHTML = "";
+
                 users.forEach(user => {
                     document.getElementById("search-others").innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center p-2 active"><small>${user.username}</small><small class="fas fa-plus cursor-pointer" onclick="addContact(this, ${user.id});"></small></li>`;
                 });
             } else if(type === 'asked') {
+                document.getElementById("search-asked").innerHTML = "";
+
                 users.forEach(user => {
                     document.getElementById("search-asked").innerHTML += `<li class="list-group-item p-2 active"><small>${user.username}</small></li>`;
                 });
@@ -132,10 +137,6 @@
     });
 
     document.getElementById("search").addEventListener("input", e => {
-        document.getElementById("search-contacts").innerHTML = "";
-        document.getElementById("search-others").innerHTML = "";
-        document.getElementById("search-asked").innerHTML = "";
-
         if(e.target.value) {
             socket.emit('contact search', e.target.value);
 
