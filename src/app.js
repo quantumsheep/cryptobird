@@ -75,10 +75,30 @@ function checkAccount(session, callback = (valid) => {}) {
     }
 }
 
+app.get('/get/contacts', (req, res) => {
+    checkAccount(req.session, valid => {
+        if(valid) {
+            res.setHeader('Content-Type', 'application/json');
+
+            database.query("SELECT id, username FROM USER WHERE username LIKE CONCAT('%', '', '%') AND id IN (SELECT contact FROM CONTACT as c1 WHERE status = 1 AND user = ? AND user = (SELECT contact FROM CONTACT as c2 WHERE status = 1 AND user = c1.contact AND contact = c1.user)) OR id = ? LIMIT 40;", [req.session.account.id, req.session.account.id], (err, results, fields) => {
+                if(err) console.log(err);
+                
+                res.send(JSON.stringify(results));
+            });
+        } else {
+            req.session.errorCode = 404;
+
+            res.redirect('/error');
+        }
+    });
+})
+
 app.get('/error', (req, res) => {
     if (!req.session.errorCode) {
         req.session.errorCode = 404;
     }
+
+    res.status(req.session.errorCode);
 
     res.render('error', {
         session: req.session,
@@ -297,7 +317,16 @@ app.post('/register', (req, res) => {
 app.use('*', (req, res) => {
     req.session.errorCode = 404;
 
-    res.redirect('/error');
+    if(req.method !== 'GET' && req.method !== 'get') {
+        res.redirect('/error');
+    } else {
+        res.status(404);
+
+        res.render('error', {
+            session: req.session,
+            isError: true
+        });
+    }
 });
 
 io.use(ios(sess));
@@ -309,9 +338,11 @@ io.on('connection', socket => {
         });
 
         socket.on('user connect', data => {
-            if (data && data.url) {
-                socket.handshake.data = data;
-                socket.handshake.data.inMessenger = true;
+            if (data && data.url && !socket.handshake.data) {
+                socket.handshake.data = {
+                    url: data.url,
+                    inMessenger: true
+                };
 
                 socket.handshake.data.contact = socket.handshake.data.url.replace(/(^\/messenger\/)/gi, '');
 
@@ -344,26 +375,30 @@ io.on('connection', socket => {
         });
 
         socket.on('chat message', msg => {
-            if (socket.handshake.data.inMessenger && socket.handshake.data && socket.handshake.data.contact && !Number.isNaN(socket.handshake.data.contact) && socket.handshake.session.account && msg) {
-                database.query("SELECT COUNT(*) as valid FROM CONTACT as c1 WHERE status=1 AND user = ? AND contact = ? AND (SELECT status FROM CONTACT WHERE user=c1.contact AND contact=c1.user)=1;", [socket.handshake.session.account.id, socket.handshake.data.contact], (err, results, fields) => {
-                    if (err) console.log(err);
+            if (socket.handshake.data.inMessenger && socket.handshake.data && socket.handshake.session.account && msg) {
+                if (socket.handshake.data.contact) {
+                    database.query("SELECT COUNT(*) as valid FROM CONTACT as c1 WHERE status=1 AND user = ? AND contact = ? AND (SELECT status FROM CONTACT WHERE user=c1.contact AND contact=c1.user)=1;", [socket.handshake.session.account.id, socket.handshake.data.contact], (err, results, fields) => {
+                        if (err) console.log(err);
 
-                    if (results) {
-                        for (let i in io.sockets.connected) {
-                            if (io.sockets.connected[i].handshake.session.account && io.sockets.connected[i].handshake.session.account.id && (io.sockets.connected[i].handshake.session.account.id == socket.handshake.data.contact || io.sockets.connected[i].handshake.session.account.id == socket.handshake.session.account.id)) {
-                                if (io.sockets.connected[i].handshake.data && (io.sockets.connected[i].handshake.data.contact == socket.handshake.session.account.id || socket.handshake.data.contact == socket.handshake.session.account.id || io.sockets.connected[i].handshake.session.account.id == socket.handshake.session.account.id)) {
-                                    io.sockets.connected[i].emit('chat message', socket.handshake.session.account.id, `${socket.handshake.session.account.username}: ${msg}`);
-                                } else {
-                                    io.sockets.connected[i].emit('chat message update', socket.handshake.session.account.id, msg);
+                        if (results) {
+                            for (let i in io.sockets.connected) {
+                                if (io.sockets.connected[i].handshake.session.account && io.sockets.connected[i].handshake.session.account.id && (io.sockets.connected[i].handshake.session.account.id == socket.handshake.data.contact || io.sockets.connected[i].handshake.session.account.id == socket.handshake.session.account.id)) {
+                                    if (io.sockets.connected[i].handshake.data && (io.sockets.connected[i].handshake.data.contact == socket.handshake.session.account.id || socket.handshake.data.contact == socket.handshake.session.account.id || io.sockets.connected[i].handshake.session.account.id == socket.handshake.session.account.id)) {
+                                        io.sockets.connected[i].emit('chat message', socket.handshake.session.account.id, `${socket.handshake.session.account.username}: ${msg}`);
+                                    } else {
+                                        io.sockets.connected[i].emit('chat message update', socket.handshake.session.account.id, msg);
+                                    }
                                 }
                             }
-                        }
 
-                        database.query("INSERT INTO USER_MESSAGE(`from`, `to`, content, datetime) VALUES(?, ?, ?, NOW())", [socket.handshake.session.account.id, parseInt(socket.handshake.data.contact), msg], (err, results, fields) => {
-                            if (err) console.log(err);
-                        });
-                    }
-                });
+                            database.query("INSERT INTO USER_MESSAGE(`from`, `to`, content, datetime) VALUES(?, ?, ?, NOW())", [socket.handshake.session.account.id, parseInt(socket.handshake.data.contact), msg], (err, results, fields) => {
+                                if (err) console.log(err);
+                            });
+                        }
+                    });
+                } else if (socket.handshake.data.group) {
+
+                }
             }
         });
 

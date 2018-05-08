@@ -73,3 +73,10 @@ a.btn {
 .cursor-pointer {
     cursor: pointer;
 }
+
+.profil-pic {
+    border-radius: 100%;
+    padding-top: 100%;
+    background-size: cover;
+    background-position: center;
+}

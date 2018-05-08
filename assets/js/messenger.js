@@ -39,25 +39,25 @@ function addContact(elem, id) {
     http.send(`user=${id}`);
 }
 
-socket.on('contact search', (users, type) => {
-    if (users) {
+socket.on('contact search', (contacts, type) => {
+    if (contacts) {
         if (type === 'contact') {
             document.getElementById("search-contacts").innerHTML = "";
 
-            users.forEach(user => {
-                document.getElementById("search-contacts").innerHTML += `<a href="/messenger/${user.id}" class="list-group-item list-group-item-action p-2 active"><small>${user.username}</small></a>`;
+            contacts.forEach(contact => {
+                document.getElementById("search-contacts").innerHTML += `<a href="/messenger/${contact.id}" class="list-group-item list-group-item-action p-2 active"><small>${contact.username}</small></a>`;
             });
         } else if (type === 'others') {
             document.getElementById("search-others").innerHTML = "";
 
-            users.forEach(user => {
-                document.getElementById("search-others").innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center p-2 active"><small>${user.username}</small><small class="fas fa-plus cursor-pointer" onclick="addContact(this, ${user.id});"></small></li>`;
+            contacts.forEach(contact => {
+                document.getElementById("search-others").innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center p-2 active"><small>${contact.username}</small><small class="fas fa-plus cursor-pointer" onclick="addContact(this, ${user.id});"></small></li>`;
             });
         } else if (type === 'asked') {
             document.getElementById("search-asked").innerHTML = "";
 
-            users.forEach(user => {
-                document.getElementById("search-asked").innerHTML += `<li class="list-group-item p-2 active"><small>${user.username}</small></li>`;
+            contacts.forEach(contact => {
+                document.getElementById("search-asked").innerHTML += `<li class="list-group-item p-2 active"><small>${contact.username}</small></li>`;
             });
         }
     }
@@ -76,11 +76,75 @@ document.getElementById("search").addEventListener("input", e => {
     if (e.target.value) {
         socket.emit('contact search', e.target.value);
 
-        document.getElementById("contact-list").style.display = "none";
-        document.getElementById("search-response").style.display = "";
+        document.getElementById("messages-list").classList.add("d-none");
+        document.getElementById("search-response").classList.remove("d-none");
     } else {
-        document.getElementById("search-response").style.display = "none";
-        document.getElementById("contact-list").style.display = "";
+        document.getElementById("search-response").classList.add("d-none");
+        document.getElementById("messages-list").classList.remove("d-none");
+    }
+});
+
+document.getElementById("btn-messages").addEventListener('click', e => {
+    if (!e.target.classList.contains('active')) {
+        document.getElementById("btn-contacts").classList.remove("active");
+        document.getElementById("btn-me").classList.remove("active");
+        document.getElementById("btn-messages").classList.add("active");
+
+        document.getElementById("search-response").classList.add("d-none");
+        document.getElementById("my-infos").classList.add("d-none");
+        document.getElementById("contacts-list").classList.add("d-none");
+        document.getElementById("search").classList.remove("d-none");
+        document.getElementById("messages-list").classList.remove("d-none");
+    }
+});
+
+document.getElementById("btn-contacts").addEventListener('click', e => {
+    if (!e.target.classList.contains('active')) {
+        e.target.classList.add('active');
+
+        const http = new XMLHttpRequest();
+        http.open("GET", "/get/contacts", true);
+
+        http.onreadystatechange = (req, ev) => {
+            if (http.readyState == 4 && http.status == 200 && http.responseText) {
+                const contacts = JSON.parse(http.responseText);
+
+                if (Array.isArray(contacts)) {
+                    const contacts_list = document.getElementById("contacts-list");
+                    contacts_list.innerHTML = "";
+                    
+                    contacts.forEach(contact => {
+                        contacts_list.innerHTML += `<a href="/messenger/${contact.id}" class="list-group-item list-group-item-action p-2 active"><small>${contact.username}</small></a>`;
+                    });
+
+                    document.getElementById("btn-messages").classList.remove("active");
+                    document.getElementById("btn-me").classList.remove("active");
+                    document.getElementById("btn-contacts").classList.add("active");
+
+                    document.getElementById("messages-list").classList.add("d-none");
+                    document.getElementById("search-response").classList.add("d-none");
+                    document.getElementById("my-infos").classList.add("d-none");
+                    document.getElementById("search").classList.remove("d-none");
+                    document.getElementById("contacts-list").classList.remove("d-none");
+                }
+            }
+        }
+
+        http.send();
+    }
+});
+
+document.getElementById("btn-me").addEventListener('click', e => {
+    if (!e.target.classList.contains('active')) {
+        document.getElementById("btn-contacts").classList.remove("active");
+        document.getElementById("btn-messages").classList.remove("active");
+        document.getElementById("btn-me").classList.add("active");
+
+        document.getElementById("search").classList.add("d-none");
+        document.getElementById("search-response").classList.add("d-none");
+        document.getElementById("contacts-list").classList.add("d-none");
+        document.getElementById("messages-list").classList.add("d-none");
+        document.getElementById("my-infos").classList.remove("d-none");
     }
 });
 
