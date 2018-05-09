@@ -180,9 +180,7 @@ app.get('/register', (req, res) => {
 app.get('/logout', (req, res) => {
     req.session.account = undefined;
 
-    res.redirect('/login', {
-        csrfToken: req.csrfToken()
-    });
+    res.redirect('/login');
 });
 
 app.post('/login', (req, res) => {
