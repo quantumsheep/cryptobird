@@ -51,7 +51,7 @@ socket.on('contact search', (contacts, type) => {
             document.getElementById("search-others").innerHTML = "";
 
             contacts.forEach(contact => {
-                document.getElementById("search-others").innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center p-2 active"><small>${contact.username}</small><small class="fas fa-plus cursor-pointer" onclick="addContact(this, ${user.id});"></small></li>`;
+                document.getElementById("search-others").innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center p-2 active"><small>${contact.username}</small><small class="fas fa-plus cursor-pointer" onclick="addContact(this, ${contact.id});"></small></li>`;
             });
         } else if (type === 'asked') {
             document.getElementById("search-asked").innerHTML = "";
