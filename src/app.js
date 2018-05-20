@@ -77,12 +77,12 @@ function checkAccount(session, callback = (valid) => {}) {
 
 app.get('/get/contacts', (req, res) => {
     checkAccount(req.session, valid => {
-        if(valid) {
+        if (valid) {
             res.setHeader('Content-Type', 'application/json');
 
             database.query("SELECT id, username FROM USER WHERE username LIKE CONCAT('%', '', '%') AND id IN (SELECT contact FROM CONTACT as c1 WHERE status = 1 AND user = ? AND user = (SELECT contact FROM CONTACT as c2 WHERE status = 1 AND user = c1.contact AND contact = c1.user)) OR id = ? LIMIT 40;", [req.session.account.id, req.session.account.id], (err, results, fields) => {
-                if(err) console.log(err);
-                
+                if (err) console.log(err);
+
                 res.send(JSON.stringify(results));
             });
         } else {
@@ -315,7 +315,7 @@ app.post('/register', (req, res) => {
 app.use('*', (req, res) => {
     req.session.errorCode = 404;
 
-    if(req.method !== 'GET' && req.method !== 'get') {
+    if (req.method !== 'GET' && req.method !== 'get') {
         res.redirect('/error');
     } else {
         res.status(404);
