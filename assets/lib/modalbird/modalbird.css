@@ -1,0 +1,78 @@
+.modalbird {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    z-index: 9999;
+    background-color: rgba(0, 0, 0, 0.3);
+    transition: all .3s;
+    opacity: 1;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.modalbird-isopen {
+    overflow: hidden;
+}
+
+.modalbird.hide {
+    opacity: 0;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    pointer-events: none;
+}
+
+.modalbird-body {
+    width: 380px;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 4px;
+    box-shadow: 0px 0px 55px rgba(0, 0, 0, 0.2);
+    margin-top: 25vh;
+}
+
+.modalbird-header {}
+
+.modalbird-title {
+    display: inline-block;
+}
+
+i.modalbird-closemark {
+    font-style: normal;
+    font-size: 28px;
+    line-height: 28px;
+    float: right;
+}
+
+i.modalbird-closemark:hover {
+    cursor: pointer;
+}
+
+i.modalbird-closemark:after {
+    content: '\d7';
+}
+
+@keyframes fadein {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeout {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
