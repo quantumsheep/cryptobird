@@ -2,6 +2,10 @@
     box-sizing: border-box;
 }
 
+input {
+    transition-duration: .3s !important;
+}
+
 html,
 body {
     height: 100%;
@@ -11,6 +15,13 @@ body {
     margin: 0;
     padding: 0;
     word-break: break-all;
+}
+
+div {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .rpanel {
@@ -79,4 +90,14 @@ a.btn {
     padding-top: 100%;
     background-size: cover;
     background-position: center;
+}
+
+.search-bar {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+    transition: all .3s;
+}
+
+.search-bar:focus {
+    background: rgba(0, 0, 0, 0.15);
 }

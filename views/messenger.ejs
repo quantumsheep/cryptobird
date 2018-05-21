@@ -2,7 +2,9 @@
 <% block('title', "Messages") -%>
 <div class="h-100 d-flex">
     <div class="h-100 d-flex flex-column border-right" style="width:20em;min-width:20em;max-width:20em;">
-        <input id="search" class="form-control px-3" autocomplete="off" placeholder="Search">
+        <div id="search-box" class="px-3 py-2">
+            <input id="search" class="form-control px-3 search-bar" autocomplete="off" placeholder="Search">
+        </div>
         <div id="search-response" class="p-0 overflow-auto h-100 d-none">
             <small class="px-2 text-secondary">Contacts</small>
             <div id="search-contacts" class="list-group"></div>
@@ -12,6 +14,9 @@
             <ul id="search-asked" class="list-group"></ul>
         </div>
         <div id="contacts-list" class="p-0 overflow-auto h-100 d-none"></div>
+        <div id="groups-list" class="p-0 overflow-auto h-100 d-none">
+            <button id="new-group-btn" class="btn bg-primary text-white w-100">Create a group</button>
+        </div>
         <div id="my-infos" class="p-0 overflow-auto h-100 d-none">
             <div class="w-50 mt-2 mx-auto">
                 <div class="w-100 profil-pic" style="background-image:url(/assets/img/profil.png)"></div>
@@ -58,6 +63,7 @@
         <div class="d-flex justify-content-between">
             <button id="btn-messages" class="btn m-0 p-2 text-center w-100 active"><i class="fas fa-comments"></i></button>
             <button id="btn-contacts" class="btn m-0 p-2 text-center w-100"><i class="fas fa-user-friends"></i></button>
+            <button id="btn-groups" class="btn m-0 p-2 text-center w-100"><i class="fas fa-users"></i></button>
             <button id="btn-me" class="btn m-0 p-2 text-center w-100"><i class="fas fa-user"></i></button>
         </div>
     </div>
@@ -72,5 +78,36 @@
     </div>
 </div>
 
+<div class="modalbird hide" data-modal="group-1">
+    <form class="modalbird-body" id="group-1">
+        <div class="modalbird-header">
+            <i class="modalbird-closemark" data-action="close"></i>
+        </div>
+        <div class="modalbird-content mb-3">
+            <input class="form-control w-100 h-100 p-2" name="name" autocomplete="off" placeholder="Group's name">
+        </div>
+        <div class="modalbird-footer text-right">
+            <button class="btn text-white bg-secondary" data-action="close">Cancel</button>
+            <button type="submit" class="btn text-white bg-primary">Next</button>
+        </div>
+    </form>
+</div>
+
+<div class="modalbird hide" data-modal="group-2">
+    <form class="modalbird-body" id="group-2">
+        <div class="modalbird-header">
+            <h4 class="modalbird-title">Add members</h4>
+            <i class="modalbird-closemark" data-action="close"></i>
+        </div>
+        <div class="modalbird-content mb-3">
+            <div></div>    
+        </div>
+        <div class="modalbird-footer text-right">
+            <button class="btn text-white bg-secondary" data-action="close">Previous</button>
+            <button type="submit" class="btn text-white bg-primary">Create</button>
+        </div>
+    </form>
+</div>
+<script src="/assets/lib/modalbird/modalbird.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script src="/assets/js/messenger.js"></script>

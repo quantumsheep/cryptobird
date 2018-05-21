@@ -1,4 +1,5 @@
 const socket = io();
+ModalBird.init();
 
 socket.emit('user connect', {
     url: window.location.pathname
@@ -89,12 +90,14 @@ document.getElementById("btn-messages").addEventListener('click', e => {
         document.getElementById("btn-contacts").classList.remove("active");
         document.getElementById("btn-me").classList.remove("active");
         document.getElementById("btn-messages").classList.add("active");
+        document.getElementById("btn-groups").classList.remove("active");
 
         document.getElementById("search-response").classList.add("d-none");
         document.getElementById("my-infos").classList.add("d-none");
         document.getElementById("contacts-list").classList.add("d-none");
-        document.getElementById("search").classList.remove("d-none");
+        document.getElementById("search-box").classList.remove("d-none");
         document.getElementById("messages-list").classList.remove("d-none");
+        document.getElementById("groups-list").classList.add("d-none");
     }
 });
 
@@ -112,7 +115,7 @@ document.getElementById("btn-contacts").addEventListener('click', e => {
                 if (Array.isArray(contacts)) {
                     const contacts_list = document.getElementById("contacts-list");
                     contacts_list.innerHTML = "";
-                    
+
                     contacts.forEach(contact => {
                         contacts_list.innerHTML += `<a href="/messenger/${contact.id}" class="list-group-item list-group-item-action p-2 active"><small>${contact.username}</small></a>`;
                     });
@@ -120,12 +123,14 @@ document.getElementById("btn-contacts").addEventListener('click', e => {
                     document.getElementById("btn-messages").classList.remove("active");
                     document.getElementById("btn-me").classList.remove("active");
                     document.getElementById("btn-contacts").classList.add("active");
+                    document.getElementById("btn-groups").classList.remove("active");
 
                     document.getElementById("messages-list").classList.add("d-none");
                     document.getElementById("search-response").classList.add("d-none");
                     document.getElementById("my-infos").classList.add("d-none");
-                    document.getElementById("search").classList.remove("d-none");
+                    document.getElementById("search-box").classList.remove("d-none");
                     document.getElementById("contacts-list").classList.remove("d-none");
+                    document.getElementById("groups-list").classList.add("d-none");
                 }
             }
         }
@@ -134,17 +139,49 @@ document.getElementById("btn-contacts").addEventListener('click', e => {
     }
 });
 
+document.getElementById("btn-groups").addEventListener('click', e => {
+    if (!e.target.classList.contains('active')) {
+        document.getElementById("btn-messages").classList.remove("active");
+        document.getElementById("btn-contacts").classList.remove("active");
+        document.getElementById("btn-groups").classList.add("active");
+        document.getElementById("btn-me").classList.remove("active");
+
+        document.getElementById("search-box").classList.add("d-none");
+        document.getElementById("search-response").classList.add("d-none");
+        document.getElementById("contacts-list").classList.add("d-none");
+        document.getElementById("messages-list").classList.add("d-none");
+        document.getElementById("my-infos").classList.add("d-none");
+        document.getElementById("groups-list").classList.remove("d-none");
+    }
+});
+
 document.getElementById("btn-me").addEventListener('click', e => {
     if (!e.target.classList.contains('active')) {
         document.getElementById("btn-contacts").classList.remove("active");
         document.getElementById("btn-messages").classList.remove("active");
+        document.getElementById("btn-groups").classList.remove("active");
         document.getElementById("btn-me").classList.add("active");
 
-        document.getElementById("search").classList.add("d-none");
+        document.getElementById("search-box").classList.add("d-none");
         document.getElementById("search-response").classList.add("d-none");
         document.getElementById("contacts-list").classList.add("d-none");
         document.getElementById("messages-list").classList.add("d-none");
         document.getElementById("my-infos").classList.remove("d-none");
+        document.getElementById("groups-list").classList.add("d-none");
+    }
+});
+
+document.getElementById('new-group-btn').addEventListener('click', e => {
+    document.getElementById('group-1').name.focus();
+    ModalBird.show('group-1');
+});
+
+document.getElementById("group-1").addEventListener('submit', e => {
+    e.preventDefault();
+
+    if (e.target.name.value && e.target.name.value.length > 0) {
+        ModalBird.hide('group-1');
+        ModalBird.show('group-2');
     }
 });
 
