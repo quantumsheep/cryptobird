@@ -23,6 +23,9 @@
                 <div class="w-100 profil-pic" style="background-image:url(/assets/img/profil.png)"></div>
             </div>
             <h4 class="text-center"><%- session.account.username %></h4>
+            <hr>
+            <button type="button" class="btn w-100 mb-0">Custom username</button>
+            <a href="/logout" class="btn btn-warning w-100 mb-0">Logout</a>
         </div>
         <div id="messages-list" class="list-group p-0 overflow-auto h-100">
             <a href="#" class="list-group-item list-group-item-action flex-column align-items-start active">
@@ -101,7 +104,8 @@
             <i class="modalbird-closemark" data-action="close"></i>
         </div>
         <div class="modalbird-content mb-3">
-            <div></div>    
+            <input class="form-control" placeholder="Search">
+            <div id="new-group-search-contacts" class="list-group new-group-search-contacts"></div>
         </div>
         <div class="modalbird-footer text-right">
             <button type="button" id="group-2-previous" class="btn text-white bg-secondary" data-action="close">Previous</button>
