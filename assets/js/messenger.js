@@ -37,7 +37,7 @@ function addContact(elem, id) {
         }
     }
 
-    http.send(`user=${id}`);
+    http.send(`_csrf=${document.getElementById('_csrf').value}&user=${id}`);
 }
 
 socket.on('contact search', (contacts, type) => {
@@ -171,7 +171,14 @@ document.getElementById("btn-me").addEventListener('click', e => {
     }
 });
 
+document.getElementById('group-2-previous').addEventListener('click', e => {
+    document.getElementById('group-1').name.focus();
+    ModalBird.hide('group-2');
+    ModalBird.show('group-1');
+});
+
 document.getElementById('new-group-btn').addEventListener('click', e => {
+    document.getElementById('group-1').name.value = "";
     document.getElementById('group-1').name.focus();
     ModalBird.show('group-1');
 });

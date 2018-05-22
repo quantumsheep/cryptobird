@@ -1,5 +1,7 @@
 class ModalBird {
     static init() {
+        this.isOpen = false;
+
         document.querySelectorAll('.modalbird[data-modal]').forEach(modal => {
             modal.style.paddingRight = this.getScrollbarWidth() + 'px';
 
@@ -21,15 +23,19 @@ class ModalBird {
     static hide(modal) {
         document.querySelectorAll(`.modalbird[data-modal=${modal}]`).forEach(modal => {
             modal.classList.add('hide');
+            this.isOpen = false;
 
             setTimeout(() => {
-                document.body.style.paddingRight = null;
-                document.body.classList.remove('modalbird-isopen');
+                if(this.isOpen) {
+                    document.body.style.paddingRight = null;
+                    document.body.classList.remove('modalbird-isopen');
+                }
             }, 300);
         });
     }
 
     static show(modal) {
+        this.isOpen = true;
         document.body.classList.add('modalbird-isopen');
         document.body.style.paddingRight = this.getScrollbarWidth() + 'px';
 

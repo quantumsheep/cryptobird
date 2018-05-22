@@ -1,5 +1,6 @@
 <% layout('layout') -%>
 <% block('title', "Messages") -%>
+<input type="hidden" id="_csrf" value="<%- csrfToken %>">
 <div class="h-100 d-flex">
     <div class="h-100 d-flex flex-column border-right" style="width:20em;min-width:20em;max-width:20em;">
         <div id="search-box" class="px-3 py-2">
@@ -87,7 +88,7 @@
             <input class="form-control w-100 h-100 p-2" name="name" autocomplete="off" placeholder="Group's name">
         </div>
         <div class="modalbird-footer text-right">
-            <button class="btn text-white bg-secondary" data-action="close">Cancel</button>
+            <button type="button" class="btn text-white bg-secondary" data-action="close">Cancel</button>
             <button type="submit" class="btn text-white bg-primary">Next</button>
         </div>
     </form>
@@ -103,7 +104,7 @@
             <div></div>    
         </div>
         <div class="modalbird-footer text-right">
-            <button class="btn text-white bg-secondary" data-action="close">Previous</button>
+            <button type="button" id="group-2-previous" class="btn text-white bg-secondary" data-action="close">Previous</button>
             <button type="submit" class="btn text-white bg-primary">Create</button>
         </div>
     </form>
