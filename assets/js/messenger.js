@@ -189,7 +189,10 @@ document.getElementById("group-1").addEventListener('submit', e => {
     if (e.target.name.value && e.target.name.value.length > 0) {
         ModalBird.hide('group-1');
         ModalBird.show('group-2');
+    } else {
+        document.getElementById('group-1').name.focus();
     }
 });
 
 socket.emit('get messages', 0);
+socket.emit('get talks');
